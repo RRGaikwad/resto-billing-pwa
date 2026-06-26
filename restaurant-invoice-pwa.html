@@ -1575,7 +1575,6 @@ Pune, Maharashtra 411001</textarea>
   
   const clientId = Math.random().toString(36).substring(2, 15);
   let unsubscribeData = null;
-  let hasInitiallyLoaded = false;
 
   function runFallbackLogic() {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -1602,31 +1601,21 @@ Pune, Maharashtra 411001</textarea>
           
           if (data.currentData) {
             // Restore if it's the first load OR if another device made the update
-            if (!hasInitiallyLoaded || (data.lastUpdatedBy && data.lastUpdatedBy !== clientId)) {
+            if (!data.lastUpdatedBy || data.lastUpdatedBy !== clientId) {
               restoreFormData(data.currentData);
-              hasInitiallyLoaded = true;
             }
           }
         } else {
-          // No document yet
-          if (!hasInitiallyLoaded) {
-            runFallbackLogic();
-            hasInitiallyLoaded = true;
-          }
+          // No document yet, fallback
+          runFallbackLogic();
         }
       }, err => {
         console.error("Error listening to Firestore", err);
-        if (!hasInitiallyLoaded) {
-          runFallbackLogic();
-          hasInitiallyLoaded = true;
-        }
+        runFallbackLogic();
       });
     } catch (e) {
       console.error("Error setting up Firestore listener", e);
-      if (!hasInitiallyLoaded) {
-        runFallbackLogic();
-        hasInitiallyLoaded = true;
-      }
+      runFallbackLogic();
     }
   }
 
@@ -2083,14 +2072,23 @@ Pune, Maharashtra 411001</textarea>
       if (unsubscribeHistory) unsubscribeHistory();
       
       unsubscribeHistory = db.collection('users').doc(currentUser.uid).collection('invoices')
-        .orderBy('createdAt', 'desc')
         .onSnapshot(snapshot => {
           if (snapshot.empty) {
             list.innerHTML = '<div class="no-history">No saved invoices yet.</div>';
           } else {
+            const docs = [];
+            snapshot.forEach(doc => docs.push({ id: doc.id, data: doc.data() }));
+            
+            // Sort locally to avoid Firebase excluding pending timestamps
+            docs.sort((a, b) => {
+              const timeA = a.data.createdAt ? a.data.createdAt.toMillis() : Date.now();
+              const timeB = b.data.createdAt ? b.data.createdAt.toMillis() : Date.now();
+              return timeB - timeA;
+            });
+
             let html = '';
-            snapshot.forEach(doc => {
-              const h = doc.data();
+            docs.forEach(item => {
+              const h = item.data;
               html += `
                 <div class="history-item">
                   <div class="history-item-info">
@@ -2098,8 +2096,8 @@ Pune, Maharashtra 411001</textarea>
                     <span>${h.date ? formatDate(h.date) : '—'}</span>
                   </div>
                   <div class="history-item-actions">
-                    <button class="btn-hist" onclick="loadHistory('${doc.id}')">Load</button>
-                    <button class="btn-hist danger" onclick="deleteHistory('${doc.id}')">Delete</button>
+                    <button class="btn-hist" onclick="loadHistory('${item.id}')">Load</button>
+                    <button class="btn-hist danger" onclick="deleteHistory('${item.id}')">Delete</button>
                   </div>
                 </div>
               `;
