@@ -1009,8 +1009,86 @@
   /* Auth state active classes */
   body.authenticated #auth-overlay { opacity: 0; pointer-events: none; }
 </style>
+  /* ─── PIN MODAL ─── */
+  #pin-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  #pin-modal-overlay.show { display: flex; }
+  #pin-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-sidebar);
+    border-radius: 12px;
+    padding: 24px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  #pin-card h3 { color: var(--accent); margin-bottom: 8px; font-size: 18px; }
+  #pin-card p { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+  .pin-display {
+    font-size: 24px;
+    letter-spacing: 12px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-weight: bold;
+    min-height: 36px;
+  }
+  .pin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .pin-btn {
+    background: var(--input-bg);
+    border: 1px solid var(--border-sidebar);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 12px 0;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .pin-btn:hover { background: rgba(255,255,255,0.1); }
+  .pin-btn.danger { color: var(--danger); }
+  #pin-error { color: var(--danger); font-size: 11px; min-height: 14px; margin-bottom: 10px; }
+</style>
 </head>
 <body>
+
+<!-- ═══════════════ PIN MODAL ═══════════════ -->
+<div id="pin-modal-overlay">
+  <div id="pin-card">
+    <h3 id="pin-title">Enter PIN</h3>
+    <p id="pin-desc">To unlock Restaurant Info</p>
+    <div class="pin-display" id="pin-display"></div>
+    <div id="pin-error"></div>
+    <div class="pin-keypad">
+      <button class="pin-btn" onclick="typePin('1')">1</button>
+      <button class="pin-btn" onclick="typePin('2')">2</button>
+      <button class="pin-btn" onclick="typePin('3')">3</button>
+      <button class="pin-btn" onclick="typePin('4')">4</button>
+      <button class="pin-btn" onclick="typePin('5')">5</button>
+      <button class="pin-btn" onclick="typePin('6')">6</button>
+      <button class="pin-btn" onclick="typePin('7')">7</button>
+      <button class="pin-btn" onclick="typePin('8')">8</button>
+      <button class="pin-btn" onclick="typePin('9')">9</button>
+      <button class="pin-btn danger" onclick="clearPin()">C</button>
+      <button class="pin-btn" onclick="typePin('0')">0</button>
+      <button class="pin-btn" onclick="closePinModal()" style="font-size: 14px;">✕</button>
+    </div>
+    <div class="auth-switch" id="pin-reset-container">
+      <a onclick="resetPinViaEmail()" style="cursor: pointer;">Reset using my account email</a>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════ AUTH OVERLAY ═══════════════ -->
 <div id="auth-overlay">
@@ -1098,6 +1176,7 @@ Pune, Maharashtra 411001</textarea>
           <label>Logo (upload image)</label>
           <input type="file" id="res-logo" accept="image/*" onchange="handleLogo(this)" />
         </div>
+        <button class="btn-premium" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);" onclick="lockRestaurantInfo()">💾 Save & Lock Settings</button>
       </div>
     </div>
 
@@ -2274,19 +2353,123 @@ Pune, Maharashtra 411001</textarea>
   
 
 
-  function unlockRestaurantInfo() {
-    // Set your desired password here
-    const correctPassword = "admin123"; // You can change this to any password
-    const enteredPassword = prompt("Enter password to edit Restaurant Info:");
-    if (enteredPassword === correctPassword) {
-      document.getElementById('restaurant-info-content').style.display = 'block';
-      const btn = document.getElementById('unlock-res-info-btn');
-      btn.textContent = '🔓 Unlocked';
-      btn.style.opacity = '0.6';
-      btn.style.cursor = 'default';
-      btn.onclick = null;
-    } else if (enteredPassword !== null) {
-      alert('Incorrect password!');
+  /* ── PIN Logic ── */
+  let currentPinState = '';
+  let modePin = 'ENTER'; // ENTER, SETUP
+  let userPin = null;
+
+  async function unlockRestaurantInfo() {
+    if (!currentUser) return;
+    
+    try {
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      userPin = doc.data()?.resPin || null;
+      
+      if (!userPin) {
+        modePin = 'SETUP';
+        document.getElementById('pin-title').textContent = 'Create PIN';
+        document.getElementById('pin-desc').textContent = 'Set a 4-digit PIN to secure settings';
+        document.getElementById('pin-reset-container').style.display = 'none';
+      } else {
+        modePin = 'ENTER';
+        document.getElementById('pin-title').textContent = 'Enter PIN';
+        document.getElementById('pin-desc').textContent = 'To unlock Restaurant Info';
+        document.getElementById('pin-reset-container').style.display = 'block';
+      }
+      
+      currentPinState = '';
+      updatePinDisplay();
+      document.getElementById('pin-error').textContent = '';
+      document.getElementById('pin-modal-overlay').classList.add('show');
+    } catch(e) {
+      console.error(e);
+      showToast('Error loading security settings');
+    }
+  }
+
+  function typePin(num) {
+    if (currentPinState.length < 4) {
+      currentPinState += num;
+      updatePinDisplay();
+      if (currentPinState.length === 4) {
+        processPin();
+      }
+    }
+  }
+
+  function clearPin() {
+    currentPinState = '';
+    updatePinDisplay();
+  }
+
+  function updatePinDisplay() {
+    document.getElementById('pin-display').textContent = '•'.repeat(currentPinState.length);
+  }
+
+  function closePinModal() {
+    document.getElementById('pin-modal-overlay').classList.remove('show');
+  }
+
+  async function processPin() {
+    const errEl = document.getElementById('pin-error');
+    if (modePin === 'SETUP') {
+      try {
+        await db.collection('users').doc(currentUser.uid).set({ resPin: currentPinState }, { merge: true });
+        userPin = currentPinState;
+        showToast('✓ PIN saved!');
+        unlockPanel();
+        closePinModal();
+      } catch(e) {
+        errEl.textContent = 'Error saving PIN';
+        currentPinState = '';
+        updatePinDisplay();
+      }
+    } else {
+      if (currentPinState === userPin) {
+        unlockPanel();
+        closePinModal();
+      } else {
+        errEl.textContent = 'Incorrect PIN';
+        currentPinState = '';
+        updatePinDisplay();
+      }
+    }
+  }
+
+  function unlockPanel() {
+    document.getElementById('restaurant-info-content').style.display = 'block';
+    const btn = document.getElementById('unlock-res-info-btn');
+    btn.textContent = '🔓 Unlocked';
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'default';
+    btn.onclick = null;
+  }
+
+  async function lockRestaurantInfo() {
+    await saveData();
+    document.getElementById('restaurant-info-content').style.display = 'none';
+    const btn = document.getElementById('unlock-res-info-btn');
+    btn.textContent = '🔒 Edit';
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.onclick = unlockRestaurantInfo;
+    showToast('✓ Settings locked and saved');
+  }
+
+  async function resetPinViaEmail() {
+    if (!currentUser) return;
+    const confirmEmail = prompt("To reset your PIN, please verify your account by entering your email (" + currentUser.email + "):");
+    if (confirmEmail === currentUser.email) {
+      try {
+        await db.collection('users').doc(currentUser.uid).set({ resPin: null }, { merge: true });
+        showToast('✓ PIN has been reset.');
+        closePinModal();
+        unlockRestaurantInfo(); // Re-open to prompt for new PIN setup
+      } catch(e) {
+        alert("Error resetting PIN.");
+      }
+    } else if (confirmEmail !== null) {
+      alert("Email did not match. PIN reset aborted.");
     }
   }
 
