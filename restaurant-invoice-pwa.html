@@ -1530,15 +1530,44 @@ Pune, Maharashtra 411001</textarea>
     if (!currentUser) return; // Don't save if not logged in
     const data = gatherFormData();
     
+    // Fallback locally immediately
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+    if (window.saveTimeout) clearTimeout(window.saveTimeout);
+    window.saveTimeout = setTimeout(async () => {
+      try {
+        const payload = {
+          currentData: data,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        // Always preserve PIN
+        if (typeof userPin !== 'undefined' && userPin !== null) {
+          payload.resPin = userPin;
+        }
+        await db.collection('users').doc(currentUser.uid).set(payload, { merge: true });
+      } catch (e) {
+        console.error("Error saving to Firestore", e);
+      }
+    }, 1200);
+  }
+
+  async function forceSaveData() {
+    if (!currentUser) return;
+    const data = gatherFormData();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (window.saveTimeout) clearTimeout(window.saveTimeout);
+    
     try {
-      await db.collection('users').doc(currentUser.uid).set({
+      const payload = {
         currentData: data,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      };
+      if (typeof userPin !== 'undefined' && userPin !== null) {
+        payload.resPin = userPin;
+      }
+      await db.collection('users').doc(currentUser.uid).set(payload, { merge: true });
     } catch (e) {
-      console.error("Error saving to Firestore", e);
-      // Fallback to local storage if offline
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      console.error("Error force saving to Firestore", e);
     }
   }
   
@@ -2454,9 +2483,10 @@ Pune, Maharashtra 411001</textarea>
   }
 
   async function lockRestaurantInfo() {
-    await saveData();
-    document.getElementById('restaurant-info-content').style.display = 'none';
     const btn = document.getElementById('unlock-res-info-btn');
+    btn.textContent = 'Saving...';
+    await forceSaveData();
+    document.getElementById('restaurant-info-content').style.display = 'none';
     btn.textContent = '🔒 Edit';
     btn.style.opacity = '1';
     btn.style.cursor = 'pointer';
@@ -2470,6 +2500,7 @@ Pune, Maharashtra 411001</textarea>
     if (confirmEmail === currentUser.email) {
       try {
         await db.collection('users').doc(currentUser.uid).set({ resPin: null }, { merge: true });
+        userPin = null; // Clear in memory
         showToast('✓ PIN has been reset.');
         closePinModal();
         unlockRestaurantInfo(); // Re-open to prompt for new PIN setup
