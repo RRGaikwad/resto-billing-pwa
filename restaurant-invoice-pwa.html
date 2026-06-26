@@ -2070,6 +2070,8 @@ Pune, Maharashtra 411001</textarea>
     updatePreview();
   }
 
+  let unsubscribeHistory = null;
+
   async function openHistory() {
     const list = document.getElementById('history-list');
     list.innerHTML = '<div class="no-history">Loading...</div>';
@@ -2078,28 +2080,36 @@ Pune, Maharashtra 411001</textarea>
     if (!currentUser) return;
     
     try {
-      const snapshot = await db.collection('users').doc(currentUser.uid).collection('invoices').orderBy('createdAt', 'desc').get();
-      if (snapshot.empty) {
-        list.innerHTML = '<div class="no-history">No saved invoices yet.</div>';
-      } else {
-        let html = '';
-        snapshot.forEach(doc => {
-          const h = doc.data();
-          html += `
-            <div class="history-item">
-              <div class="history-item-info">
-                <strong>${escHtml(h.label)} — ${escHtml(h.customer)}</strong>
-                <span>${h.date ? formatDate(h.date) : '—'}</span>
-              </div>
-              <div class="history-item-actions">
-                <button class="btn-hist" onclick="loadHistory('${doc.id}')">Load</button>
-                <button class="btn-hist danger" onclick="deleteHistory('${doc.id}')">Delete</button>
-              </div>
-            </div>
-          `;
+      if (unsubscribeHistory) unsubscribeHistory();
+      
+      unsubscribeHistory = db.collection('users').doc(currentUser.uid).collection('invoices')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+          if (snapshot.empty) {
+            list.innerHTML = '<div class="no-history">No saved invoices yet.</div>';
+          } else {
+            let html = '';
+            snapshot.forEach(doc => {
+              const h = doc.data();
+              html += `
+                <div class="history-item">
+                  <div class="history-item-info">
+                    <strong>${escHtml(h.label)} — ${escHtml(h.customer)}</strong>
+                    <span>${h.date ? formatDate(h.date) : '—'}</span>
+                  </div>
+                  <div class="history-item-actions">
+                    <button class="btn-hist" onclick="loadHistory('${doc.id}')">Load</button>
+                    <button class="btn-hist danger" onclick="deleteHistory('${doc.id}')">Delete</button>
+                  </div>
+                </div>
+              `;
+            });
+            list.innerHTML = html;
+          }
+        }, err => {
+          console.error(err);
+          list.innerHTML = '<div class="no-history">Error loading history.</div>';
         });
-        list.innerHTML = html;
-      }
     } catch(e) {
       list.innerHTML = '<div class="no-history">Error loading history.</div>';
     }
@@ -2112,6 +2122,7 @@ Pune, Maharashtra 411001</textarea>
       if (doc.exists) {
         restoreFormData(doc.data().formData);
         closeHistoryModal();
+        saveData(); // Broadcast loaded data to other devices
       }
     } catch(e) { console.error(e); }
   }
@@ -2120,7 +2131,7 @@ Pune, Maharashtra 411001</textarea>
     if (!currentUser || !confirm('Delete this invoice?')) return;
     try {
       await db.collection('users').doc(currentUser.uid).collection('invoices').doc(docId).delete();
-      openHistory();
+      // onSnapshot will automatically update the UI
     } catch(e) { console.error(e); }
   }
 
@@ -2130,6 +2141,10 @@ Pune, Maharashtra 411001</textarea>
 
   function closeHistoryModal() {
     document.getElementById('modal-overlay').classList.remove('show');
+    if (unsubscribeHistory) {
+      unsubscribeHistory();
+      unsubscribeHistory = null;
+    }
   }
 
   function resetForm() {
