@@ -1538,6 +1538,7 @@ Pune, Maharashtra 411001</textarea>
       try {
         const payload = {
           currentData: data,
+          lastUpdatedBy: clientId,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         // Always preserve PIN
@@ -1560,6 +1561,7 @@ Pune, Maharashtra 411001</textarea>
     try {
       const payload = {
         currentData: data,
+        lastUpdatedBy: clientId,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (typeof userPin !== 'undefined' && userPin !== null) {
@@ -1571,24 +1573,11 @@ Pune, Maharashtra 411001</textarea>
     }
   }
   
-  async function loadData() {
-    if (!currentUser) return;
-    try {
-      const doc = await db.collection('users').doc(currentUser.uid).get();
-      if (doc.exists) {
-        const data = doc.data();
-        // Cache PIN in memory so unlockRestaurantInfo never needs a separate read
-        userPin = data.resPin || null;
-        if (data.currentData) {
-          restoreFormData(data.currentData);
-          return;
-        }
-      }
-    } catch (e) {
-      console.error("Error loading from Firestore", e);
-    }
-    
-    // Fallback logic
+  const clientId = Math.random().toString(36).substring(2, 15);
+  let unsubscribeData = null;
+  let hasInitiallyLoaded = false;
+
+  function runFallbackLogic() {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
       restoreFormData(JSON.parse(savedData));
@@ -1598,6 +1587,46 @@ Pune, Maharashtra 411001</textarea>
       document.getElementById('inv-time').value = now.toTimeString().slice(0,5);
       addItem();
       updatePreview();
+    }
+  }
+
+  function loadData() {
+    if (!currentUser) return;
+    if (unsubscribeData) unsubscribeData(); // Clean up existing listener
+    
+    try {
+      unsubscribeData = db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          userPin = data.resPin || null;
+          
+          if (data.currentData) {
+            // Restore if it's the first load OR if another device made the update
+            if (!hasInitiallyLoaded || (data.lastUpdatedBy && data.lastUpdatedBy !== clientId)) {
+              restoreFormData(data.currentData);
+              hasInitiallyLoaded = true;
+            }
+          }
+        } else {
+          // No document yet
+          if (!hasInitiallyLoaded) {
+            runFallbackLogic();
+            hasInitiallyLoaded = true;
+          }
+        }
+      }, err => {
+        console.error("Error listening to Firestore", err);
+        if (!hasInitiallyLoaded) {
+          runFallbackLogic();
+          hasInitiallyLoaded = true;
+        }
+      });
+    } catch (e) {
+      console.error("Error setting up Firestore listener", e);
+      if (!hasInitiallyLoaded) {
+        runFallbackLogic();
+        hasInitiallyLoaded = true;
+      }
     }
   }
 
