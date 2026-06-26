@@ -1546,9 +1546,14 @@ Pune, Maharashtra 411001</textarea>
     if (!currentUser) return;
     try {
       const doc = await db.collection('users').doc(currentUser.uid).get();
-      if (doc.exists && doc.data().currentData) {
-        restoreFormData(doc.data().currentData);
-        return;
+      if (doc.exists) {
+        const data = doc.data();
+        // Cache PIN in memory so unlockRestaurantInfo never needs a separate read
+        userPin = data.resPin || null;
+        if (data.currentData) {
+          restoreFormData(data.currentData);
+          return;
+        }
       }
     } catch (e) {
       console.error("Error loading from Firestore", e);
@@ -2358,31 +2363,36 @@ Pune, Maharashtra 411001</textarea>
 
   async function unlockRestaurantInfo() {
     if (!currentUser) return;
-    
-    try {
-      const doc = await db.collection('users').doc(currentUser.uid).get();
-      userPin = doc.data()?.resPin || null;
-      
-      if (!userPin) {
-        modePin = 'SETUP';
-        document.getElementById('pin-title').textContent = 'Create PIN';
-        document.getElementById('pin-desc').textContent = 'Set a 4-digit PIN to secure settings';
-        document.getElementById('pin-reset-container').style.display = 'none';
-      } else {
-        modePin = 'ENTER';
-        document.getElementById('pin-title').textContent = 'Enter PIN';
-        document.getElementById('pin-desc').textContent = 'To unlock Restaurant Info';
-        document.getElementById('pin-reset-container').style.display = 'block';
+
+    // userPin is already cached from loadData() — no extra Firestore read needed.
+    // If for some reason it wasn't cached yet (e.g. offline), try a quick fetch,
+    // but fall through silently on failure so the modal still opens.
+    if (userPin === null) {
+      try {
+        const doc = await db.collection('users').doc(currentUser.uid).get();
+        if (doc.exists) userPin = doc.data()?.resPin || null;
+      } catch(e) {
+        // Firestore unavailable — treat as new user with no PIN
+        userPin = null;
       }
-      
-      currentPinState = '';
-      updatePinDisplay();
-      document.getElementById('pin-error').textContent = '';
-      document.getElementById('pin-modal-overlay').classList.add('show');
-    } catch(e) {
-      console.error(e);
-      showToast('Error loading security settings');
     }
+
+    if (!userPin) {
+      modePin = 'SETUP';
+      document.getElementById('pin-title').textContent = 'Create PIN';
+      document.getElementById('pin-desc').textContent = 'Set a 4-digit PIN to secure settings';
+      document.getElementById('pin-reset-container').style.display = 'none';
+    } else {
+      modePin = 'ENTER';
+      document.getElementById('pin-title').textContent = 'Enter PIN';
+      document.getElementById('pin-desc').textContent = 'To unlock Restaurant Info';
+      document.getElementById('pin-reset-container').style.display = 'block';
+    }
+
+    currentPinState = '';
+    updatePinDisplay();
+    document.getElementById('pin-error').textContent = '';
+    document.getElementById('pin-modal-overlay').classList.add('show');
   }
 
   function typePin(num) {
