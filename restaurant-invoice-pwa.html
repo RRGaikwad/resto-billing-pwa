@@ -1530,10 +1530,8 @@ Pune, Maharashtra 411001</textarea>
   const STORAGE_KEY = 'restaurant_invoice_data'; // Kept as fallback/local
   
   async function saveData() {
-    if (!currentUser) return; // Don't save if not logged in
+    if (!currentUser) return;
     const data = gatherFormData();
-    
-    // Fallback locally immediately
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
     if (window.saveTimeout) clearTimeout(window.saveTimeout);
@@ -1544,13 +1542,13 @@ Pune, Maharashtra 411001</textarea>
           lastUpdatedBy: clientId,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        // Always preserve PIN
         if (typeof userPin !== 'undefined' && userPin !== null) {
           payload.resPin = userPin;
         }
         await db.collection('users').doc(currentUser.uid).set(payload, { merge: true });
       } catch (e) {
         console.error("Error saving to Firestore", e);
+        showToast('❌ Save failed: ' + (e.code || e.message));
       }
     }, 1200);
   }
@@ -1571,8 +1569,10 @@ Pune, Maharashtra 411001</textarea>
         payload.resPin = userPin;
       }
       await db.collection('users').doc(currentUser.uid).set(payload, { merge: true });
+      showToast('✓ Settings saved & synced!');
     } catch (e) {
       console.error("Error force saving to Firestore", e);
+      showToast('❌ Sync failed: ' + (e.code || e.message));
     }
   }
   
@@ -1601,6 +1601,7 @@ Pune, Maharashtra 411001</textarea>
         if (doc.exists) {
           const data = doc.data();
           userPin = data.resPin || null;
+          document.getElementById('app-meta').textContent = `v1.3.2 | UID: ${currentUser.uid.substring(0, 6)} ✓ Live`;
           
           if (data.currentData) {
             // Restore if it's the first load OR if another device made the update
@@ -1609,15 +1610,20 @@ Pune, Maharashtra 411001</textarea>
             }
           }
         } else {
-          // No document yet, fallback
+          // No document yet, fallback — first time user
+          document.getElementById('app-meta').textContent = `v1.3.2 | UID: ${currentUser.uid.substring(0, 6)} ⚠ New`;
           runFallbackLogic();
         }
       }, err => {
-        console.error("Error listening to Firestore", err);
+        console.error("Firestore listener error", err);
+        document.getElementById('app-meta').textContent = `v1.3.2 | ❌ DB Error: ${err.code}`;
+        showToast('❌ DB Error: ' + err.message);
         runFallbackLogic();
       });
     } catch (e) {
       console.error("Error setting up Firestore listener", e);
+      document.getElementById('app-meta').textContent = `v1.3.2 | ❌ Setup Error`;
+      showToast('❌ Firestore setup failed: ' + e.message);
       runFallbackLogic();
     }
   }
