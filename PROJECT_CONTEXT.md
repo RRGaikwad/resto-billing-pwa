@@ -12,7 +12,7 @@
 |---|---|
 | **App Name** | Restaurant Billing PWA |
 | **Type** | Single-file Progressive Web App (PWA) |
-| **Current Version** | v1.4.0 |
+| **Current Version** | v1.4.1 |
 | **GitHub Repo** | https://github.com/RRGaikwad/resto-billing-pwa |
 | **Deployed URL** | Deployed on Vercel (auto-deploys on every `git push` to `main`) |
 | **Owner** | RRGaikwad |
@@ -161,11 +161,22 @@ const CACHE_NAME = 'restaurant-billing-v7'; // ← increment this number each de
 This forces all installed PWAs to download the new version.
 
 ### Current SW Cache Version
-`restaurant-billing-v8`
+`restaurant-billing-v9`
 
 ---
 
 ## 📝 Complete Change History & Bug Log
+
+### v1.4.1 — Auto-Generated Invoice Number & Hidden Date/Time Fields
+**What was added:**
+- Auto-incrementing invoice number (stored in localStorage)
+- Invoice Number, Date, and Time fields are now hidden from the sidebar form
+- Invoice number automatically increments every time "New Invoice" is clicked
+- Date and Time automatically set to current date/time when creating a new invoice
+- App version v1.4.1
+- SW cache version v9
+
+---
 
 ### v1.4.0 — Settings Modal & Sidebar Reorganization
 **What was added:**
@@ -322,4 +333,4 @@ This forces all installed PWAs to download the new version.
 
 ---
 
-*Last updated: 2026-06-28 | App Version: v1.4.0 | SW Cache: v8*
+*Last updated: 2026-06-28 | App Version: v1.4.1 | SW Cache: v9*
