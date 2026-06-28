@@ -12,7 +12,7 @@
 |---|---|
 | **App Name** | Restaurant Billing PWA |
 | **Type** | Single-file Progressive Web App (PWA) |
-| **Current Version** | v1.3.2 |
+| **Current Version** | v1.4.0 |
 | **GitHub Repo** | https://github.com/RRGaikwad/resto-billing-pwa |
 | **Deployed URL** | Deployed on Vercel (auto-deploys on every `git push` to `main`) |
 | **Owner** | RRGaikwad |
@@ -161,11 +161,23 @@ const CACHE_NAME = 'restaurant-billing-v7'; // ← increment this number each de
 This forces all installed PWAs to download the new version.
 
 ### Current SW Cache Version
-`restaurant-billing-v7`
+`restaurant-billing-v8`
 
 ---
 
 ## 📝 Complete Change History & Bug Log
+
+### v1.4.0 — Settings Modal & Sidebar Reorganization
+**What was added:**
+- Dedicated settings modal accessed via ⚙️ Settings button in sidebar
+- Moved History, Reset, and Logout buttons inside the settings modal for cleaner UX
+- Improved sidebar layout (now only shows most essential buttons
+- Beautiful, responsive styling for settings modal with icons and hover effects
+- Click outside to close the settings modal
+- App version updated to v1.4.0
+- SW cache version bumped to v8 for proper cache busting
+
+---
 
 ### v1.0.0 — Initial Build
 - Built full single-file Restaurant Billing PWA
@@ -310,4 +322,4 @@ This forces all installed PWAs to download the new version.
 
 ---
 
-*Last updated: 2026-06-27 | App Version: v1.3.2 | SW Cache: v7*
+*Last updated: 2026-06-28 | App Version: v1.4.0 | SW Cache: v8*
