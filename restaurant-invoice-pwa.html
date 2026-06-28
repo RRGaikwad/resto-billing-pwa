@@ -765,7 +765,97 @@
 
   .no-history { text-align: center; color: var(--text-muted); padding: 32px; font-size: 13px; }
 
-  /* ─── TOAST ───────────────────────────────────── */
+  /* ─── SETTINGS MODAL ───────────────────────────── */
+  #settings-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #settings-modal-overlay.show { display: flex; }
+
+  #settings-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-sidebar);
+    border-radius: 12px;
+    width: 360px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .settings-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .settings-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: var(--text-sidebar-label);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .settings-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .settings-btn {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-sidebar);
+    background: var(--bg-sidebar-section);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .settings-btn:hover {
+    background: rgba(255,255,255,0.05);
+    transform: translateY(-1px);
+  }
+
+  .settings-btn-warning:hover {
+    border-color: rgba(245,166,35,0.4);
+    background: rgba(245,166,35,0.08);
+  }
+
+  .settings-btn-danger {
+    color: var(--danger);
+  }
+
+  .settings-btn-danger:hover {
+    border-color: var(--danger);
+    background: rgba(231,76,60,0.08);
+  }
+
+  .settings-btn-icon {
+    font-size: 20px;
+  }
+
+  /* ─── TOAST ───────────────────────────── */
   #toast {
     position: fixed;
     bottom: 24px;
@@ -1088,6 +1178,38 @@
   </div>
 </div>
 
+<!-- ═══════════════ SETTINGS MODAL ═══════════════ -->
+<div id="settings-modal-overlay">
+  <div id="settings-card">
+    <div class="settings-header">
+      <h3>⚙️ Settings</h3>
+      <button class="btn-close-modal" onclick="closeSettingsModal()">✕</button>
+    </div>
+    
+    <div class="settings-section">
+      <h4 class="settings-section-title">App Actions</h4>
+      <div class="settings-buttons">
+        <button class="settings-btn" onclick="openHistory(); closeSettingsModal();">
+          <span class="settings-btn-icon">🕑</span>
+          <span class="settings-btn-text">History</span>
+        </button>
+        <button class="settings-btn settings-btn-warning" onclick="resetForm(); closeSettingsModal();">
+          <span class="settings-btn-icon">🗑</span>
+          <span class="settings-btn-text">Reset</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section" style="margin-top: 24px; border-top: 1px solid var(--border-sidebar); padding-top: 24px;">
+      <h4 class="settings-section-title">Account</h4>
+      <button class="settings-btn settings-btn-danger" onclick="logout(); closeSettingsModal();">
+        <span class="settings-btn-icon">🚪</span>
+        <span class="settings-btn-text">Logout</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ AUTH OVERLAY ═══════════════ -->
 <div id="auth-overlay">
   <div id="auth-card">
@@ -1129,10 +1251,8 @@
   <div id="sidebar-actions">
     <button class="btn-action" onclick="newInvoice()">➕ New Invoice</button>
     <button class="btn-action" onclick="saveToHistory()">💾 Save</button>
-    <button class="btn-action" onclick="openHistory()">🕑 History</button>
-    <button class="btn-action" onclick="resetForm()">🗑 Reset</button>
     <button class="btn-action" id="btn-thermal-toggle" onclick="toggleThermalMode()">🔥 Thermal</button>
-    <button class="btn-action" onclick="logout()" style="color: var(--danger);">🚪 Logout</button>
+    <button class="btn-action" onclick="openSettingsModal()">⚙️ Settings</button>
   </div>
 
   <div id="sidebar-scroll">
@@ -2153,6 +2273,21 @@ Pune, Maharashtra 411001</textarea>
       unsubscribeHistory = null;
     }
   }
+
+  function openSettingsModal() {
+    document.getElementById('settings-modal-overlay').classList.add('show');
+  }
+
+  function closeSettingsModal() {
+    document.getElementById('settings-modal-overlay').classList.remove('show');
+  }
+
+  // Close settings modal when clicking on overlay
+  document.getElementById('settings-modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeSettingsModal();
+    }
+  });
 
   function resetForm() {
     if (!confirm('Reset all fields? This cannot be undone.')) return;
