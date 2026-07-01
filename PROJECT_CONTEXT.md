@@ -12,7 +12,7 @@
 |---|---|
 | **App Name** | Restaurant Billing PWA |
 | **Type** | Single-file Progressive Web App (PWA) |
-| **Current Version** | v1.4.1 |
+| **Current Version** | v1.4.2 |
 | **GitHub Repo** | https://github.com/RRGaikwad/resto-billing-pwa |
 | **Deployed URL** | Deployed on Vercel (auto-deploys on every `git push` to `main`) |
 | **Owner** | RRGaikwad |
@@ -161,11 +161,23 @@ const CACHE_NAME = 'restaurant-billing-v7'; // ← increment this number each de
 This forces all installed PWAs to download the new version.
 
 ### Current SW Cache Version
-`restaurant-billing-v9`
+`restaurant-billing-v10`
 
 ---
 
 ## 📝 Complete Change History & Bug Log
+
+### v1.4.2 — More Attractive WhatsApp Share Message
+**What was added:**
+- Updated WhatsApp share message to be more friendly and inviting:
+  - Emojis: 👋, 🍽️✨
+  - More personal tone
+  - Warm sign-off from "Team [Restaurant Name]"
+- Clearer attachment instructions
+- App version v1.4.2
+- SW cache version v10
+
+---
 
 ### v1.4.1 — Auto-Generated Invoice Number & Hidden Date/Time Fields
 **What was added:**
@@ -333,4 +345,4 @@ This forces all installed PWAs to download the new version.
 
 ---
 
-*Last updated: 2026-06-28 | App Version: v1.4.1 | SW Cache: v9*
+*Last updated: 2026-07-01 | App Version: v1.4.2 | SW Cache: v10*

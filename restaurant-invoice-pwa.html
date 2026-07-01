@@ -1245,7 +1245,7 @@
   <div id="sidebar-header">
     <h1>🍽️ Restaurant Billing</h1>
     <p>Fill the form · Preview live · Export</p>
-    <div id="app-meta" style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px;">v1.4.1 | Sync: Waiting...</div>
+    <div id="app-meta" style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px;">v1.4.2 | Sync: Waiting...</div>
   </div>
 
   <div id="sidebar-actions">
@@ -2090,7 +2090,7 @@ Pune, Maharashtra 411001</textarea>
     phone = phone.replace(/\D/g, '');
     if (phone.length === 10) phone = '91' + phone;
 
-    const message = `Hello ${custName},\n\nThank you for visiting ${resName}! Here is your invoice/receipt for your recent order.\n\nInvoice No: ${invNo}\n\nWe hope to see you again soon! 🙏`;
+    const message = `Hi ${custName}! 👋\n\nThank you so much for dining with us at ${resName}!\n\nHere’s your invoice for your order — Invoice No: ${invNo}\n\nWe loved having you and can’t wait to welcome you back soon! 🍽️✨\n\nWarm regards,\nTeam ${resName}`;
 
     // Always download the PDF first, then open WhatsApp directly to the customer's number.
     // WhatsApp does not allow websites to attach files programmatically — the user just
@@ -2099,12 +2099,12 @@ Pune, Maharashtra 411001</textarea>
 
     if (!phone) {
       // No phone number entered — open WhatsApp without a specific contact
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(message + '\n\n(Attach the downloaded PDF invoice)')}`;
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(message + '\n\n📎 Please attach the downloaded PDF invoice from your Downloads folder.')}`;
       window.open(waUrl, '_blank');
       showToast('⚠ No phone number — opening WhatsApp...');
     } else {
       // Open WhatsApp directly to the customer's number with the pre-filled message
-      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message + '\n\n(Attach the downloaded PDF invoice)')}`;
+      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message + '\n\n📎 Please attach the downloaded PDF invoice from your Downloads folder.')}`;
       window.open(waUrl, '_blank');
       showToast('✓ PDF saved — Opening customer\'s WhatsApp...');
     }
