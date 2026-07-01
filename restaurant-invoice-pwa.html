@@ -876,27 +876,101 @@
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* ─── RESPONSIVE ──────────────────────────────── */
-  @media (max-width: 900px) {
-    body { flex-direction: column; }
+  /* ─── MOBILE PREVIEW BUTTON (pill in top-right of header) ─── */
+  /* Hidden on desktop — only revealed inside the mobile media query below */
+  #btn-mobile-preview {
+    display: none;
+  }
 
+  /* Close/Back button inside the preview overlay — hidden on desktop */
+  #btn-mobile-back {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 13px;
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 900px) {
+    /* ── Show the preview pill button ── */
+    #btn-mobile-preview {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 13px;
+      background: var(--accent);
+      color: #1A1A2E;
+      border: none;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(245,166,35,0.35);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    #btn-mobile-preview:hover { opacity: 0.88; transform: scale(0.97); }
+
+    /* ── Sidebar takes the full screen ── */
     #sidebar {
       width: 100%;
       min-width: unset;
-      height: auto;
+      height: 100vh;
       position: static;
-      max-height: 70vh;
+      overflow: hidden; /* inner sidebar-scroll still scrolls */
     }
 
-    #preview-panel { padding: 20px 12px; }
+    /* ── Preview panel is completely hidden on mobile by default ── */
+    #preview-panel {
+      display: none;
+    }
 
-    #invoice-wrapper { transform: scale(0.55) !important; transform-origin: top center; margin-bottom: -450px; }
+    /* ── When preview overlay is open: hide sidebar, show panel full-screen ── */
+    body.mobile-preview-open #sidebar {
+      display: none;
+    }
+
+    body.mobile-preview-open #preview-panel {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: var(--preview-bg);
+      padding: 16px 12px 20px;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    /* Scale invoice to fit mobile width */
+    body.mobile-preview-open #invoice-wrapper {
+      transform: scale(0.45) !important;
+      transform-origin: top center;
+      margin-bottom: -520px;
+    }
+
+    /* Show the back button inside the toolbar */
+    #btn-mobile-back { display: flex; }
   }
 
   @media (max-width: 600px) {
     #sidebar-actions { flex-wrap: wrap; }
     #export-bar { gap: 6px; }
     .btn-export { font-size: 11px; padding: 9px 0; }
-    #invoice-wrapper { transform: scale(0.45) !important; margin-bottom: -550px; }
+
+    body.mobile-preview-open #invoice-wrapper {
+      transform: scale(0.38) !important;
+      margin-bottom: -620px;
+    }
   }
 
   /* Premium Button */
@@ -1259,7 +1333,8 @@
         <p>Fill the form · Preview live · Export</p>
         <div id="app-meta" style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px;">v1.4.4 | Sync: Waiting...</div>
       </div>
-      <button class="btn-action" onclick="scrollToPreview()" style="padding: 8px 16px;">👁️ Preview</button>
+      <!-- On desktop: scrolls to preview panel. On mobile: opens full-screen preview overlay -->
+      <button id="btn-mobile-preview" onclick="openMobilePreview()">👁 Preview</button>
     </div>
   </div>
 
@@ -1441,6 +1516,8 @@ Pune, Maharashtra 411001</textarea>
 <!-- ═══════════════ PREVIEW ═══════════════ -->
 <main id="preview-panel">
   <div id="preview-toolbar">
+    <!-- Back button: only visible in mobile preview overlay -->
+    <button id="btn-mobile-back" onclick="closeMobilePreview()">← Back</button>
     <span>PREVIEW</span>
     <button class="zoom-btn" onclick="changeZoom(-10)">−</button>
     <span id="zoom-label">80%</span>
@@ -2292,11 +2369,18 @@ Pune, Maharashtra 411001</textarea>
     }
   });
 
-  function scrollToPreview() {
-    const previewPanel = document.getElementById('preview-panel');
-    if (previewPanel) {
-      previewPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  function openMobilePreview() {
+    // On mobile: open the preview as a full-screen overlay
+    // On desktop: this button is hidden so this function is never called from it
+    document.body.classList.add('mobile-preview-open');
+    // Scroll overlay back to top in case user had scrolled before
+    const panel = document.getElementById('preview-panel');
+    if (panel) panel.scrollTop = 0;
+    updatePreview();
+  }
+
+  function closeMobilePreview() {
+    document.body.classList.remove('mobile-preview-open');
   }
 
   function resetForm() {
