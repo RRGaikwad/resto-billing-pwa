@@ -1187,6 +1187,16 @@
     </div>
     
     <div class="settings-section">
+      <h4 class="settings-section-title">Restaurant Settings</h4>
+      <div class="settings-buttons">
+        <button class="settings-btn" onclick="unlockRestaurantInfo(); closeSettingsModal();">
+          <span class="settings-btn-icon">🔧</span>
+          <span class="settings-btn-text">Edit Restaurant Info</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section" style="margin-top: 24px; border-top: 1px solid var(--border-sidebar); padding-top: 24px;">
       <h4 class="settings-section-title">App Actions</h4>
       <div class="settings-buttons">
         <button class="settings-btn" onclick="openHistory(); closeSettingsModal();">
@@ -1245,7 +1255,7 @@
   <div id="sidebar-header">
     <h1>🍽️ Restaurant Billing</h1>
     <p>Fill the form · Preview live · Export</p>
-    <div id="app-meta" style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px;">v1.4.2 | Sync: Waiting...</div>
+    <div id="app-meta" style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px;">v1.4.3 | Sync: Waiting...</div>
   </div>
 
   <div id="sidebar-actions">
@@ -1259,9 +1269,8 @@
 
     <!-- RESTAURANT INFO -->
     <div class="form-section">
-      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="section-label">
         Restaurant Info
-        <button id="unlock-res-info-btn" class="btn-premium" onclick="unlockRestaurantInfo()">🔒 Edit</button>
       </div>
       <div id="restaurant-info-content" style="display:none;">
         <div class="field">

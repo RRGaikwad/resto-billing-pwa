@@ -12,7 +12,7 @@
 |---|---|
 | **App Name** | Restaurant Billing PWA |
 | **Type** | Single-file Progressive Web App (PWA) |
-| **Current Version** | v1.4.2 |
+| **Current Version** | v1.4.3 |
 | **GitHub Repo** | https://github.com/RRGaikwad/resto-billing-pwa |
 | **Deployed URL** | Deployed on Vercel (auto-deploys on every `git push` to `main`) |
 | **Owner** | RRGaikwad |
@@ -161,11 +161,21 @@ const CACHE_NAME = 'restaurant-billing-v7'; // ← increment this number each de
 This forces all installed PWAs to download the new version.
 
 ### Current SW Cache Version
-`restaurant-billing-v10`
+`restaurant-billing-v11`
 
 ---
 
 ## 📝 Complete Change History & Bug Log
+
+### v1.4.3 — Relocate Restaurant Info Edit Button to Settings Modal
+**What was added:**
+- Moved "Edit Restaurant Info" button from sidebar to Settings modal
+- Added new "Restaurant Settings" section in Settings modal as the new home for this button
+- Cleaner sidebar layout
+- App version v1.4.3
+- SW cache version v11
+
+---
 
 ### v1.4.2 — More Attractive WhatsApp Share Message
 **What was added:**
@@ -345,4 +355,4 @@ This forces all installed PWAs to download the new version.
 
 ---
 
-*Last updated: 2026-07-01 | App Version: v1.4.2 | SW Cache: v10*
+*Last updated: 2026-07-01 | App Version: v1.4.3 | SW Cache: v11*
