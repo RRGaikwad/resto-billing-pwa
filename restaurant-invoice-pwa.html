@@ -2082,40 +2082,32 @@ Pune, Maharashtra 411001</textarea>
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-    
-    const pdfBlob = pdf.output('blob');
+
     const invNo = document.getElementById('inv-number').value || 'invoice';
     const custName = document.getElementById('cust-name').value || 'Customer';
     const resName = document.getElementById('res-name').value || 'Our Restaurant';
     let phone = document.getElementById('cust-phone').value || '';
     phone = phone.replace(/\D/g, '');
     if (phone.length === 10) phone = '91' + phone;
-    
-    const file = new File([pdfBlob], `${invNo}.pdf`, { type: 'application/pdf' });
-    const message = `Hello ${custName},\n\nThank you for visiting ${resName}! Here is your invoice/receipt for your recent order. We hope to see you again soon!`;
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          title: `Invoice ${invNo}`,
-          text: message,
-          files: [file]
-        });
-        showToast('✓ Shared via WhatsApp!');
-      } catch (err) {
-        console.log('Share canceled or failed', err);
-        fallbackWhatsApp(pdf, invNo, phone, message);
-      }
-    } else {
-      fallbackWhatsApp(pdf, invNo, phone, message);
-    }
-  }
+    const message = `Hello ${custName},\n\nThank you for visiting ${resName}! Here is your invoice/receipt for your recent order.\n\nInvoice No: ${invNo}\n\nWe hope to see you again soon! 🙏`;
 
-  function fallbackWhatsApp(pdf, invNo, phone, message) {
+    // Always download the PDF first, then open WhatsApp directly to the customer's number.
+    // WhatsApp does not allow websites to attach files programmatically — the user just
+    // needs to attach the already-downloaded PDF from their Downloads folder.
     pdf.save(`${invNo}.pdf`);
-    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message + "\n\n(Please attach the downloaded PDF invoice here)")}`;
-    window.open(waUrl, '_blank');
-    showToast('✓ Opening WhatsApp...');
+
+    if (!phone) {
+      // No phone number entered — open WhatsApp without a specific contact
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(message + '\n\n(Attach the downloaded PDF invoice)')}`;
+      window.open(waUrl, '_blank');
+      showToast('⚠ No phone number — opening WhatsApp...');
+    } else {
+      // Open WhatsApp directly to the customer's number with the pre-filled message
+      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message + '\n\n(Attach the downloaded PDF invoice)')}`;
+      window.open(waUrl, '_blank');
+      showToast('✓ PDF saved — Opening customer\'s WhatsApp...');
+    }
   }
 
   async function exportJPG() {
