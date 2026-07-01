@@ -884,19 +884,19 @@
       min-width: unset;
       height: auto;
       position: static;
-      max-height: 60vh;
+      max-height: 70vh;
     }
 
     #preview-panel { padding: 20px 12px; }
 
-    #invoice-wrapper { transform: scale(0.45) !important; transform-origin: top center; margin-bottom: -520px; }
+    #invoice-wrapper { transform: scale(0.55) !important; transform-origin: top center; margin-bottom: -450px; }
   }
 
   @media (max-width: 600px) {
     #sidebar-actions { flex-wrap: wrap; }
     #export-bar { gap: 6px; }
     .btn-export { font-size: 11px; padding: 9px 0; }
-    #invoice-wrapper { transform: scale(0.38) !important; margin-bottom: -620px; }
+    #invoice-wrapper { transform: scale(0.45) !important; margin-bottom: -550px; }
   }
 
   /* Premium Button */
@@ -1253,9 +1253,14 @@
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
 <aside id="sidebar">
   <div id="sidebar-header">
-    <h1>🍽️ Restaurant Billing</h1>
-    <p>Fill the form · Preview live · Export</p>
-    <div id="app-meta" style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px;">v1.4.3 | Sync: Waiting...</div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1>🍽️ Restaurant Billing</h1>
+        <p>Fill the form · Preview live · Export</p>
+        <div id="app-meta" style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px;">v1.4.4 | Sync: Waiting...</div>
+      </div>
+      <button class="btn-action" onclick="scrollToPreview()" style="padding: 8px 16px;">👁️ Preview</button>
+    </div>
   </div>
 
   <div id="sidebar-actions">
@@ -1269,9 +1274,6 @@
 
     <!-- RESTAURANT INFO -->
     <div class="form-section">
-      <div class="section-label">
-        Restaurant Info
-      </div>
       <div id="restaurant-info-content" style="display:none;">
         <div class="field">
           <label>Restaurant Name</label>
@@ -2289,6 +2291,13 @@ Pune, Maharashtra 411001</textarea>
       closeSettingsModal();
     }
   });
+
+  function scrollToPreview() {
+    const previewPanel = document.getElementById('preview-panel');
+    if (previewPanel) {
+      previewPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
   function resetForm() {
     if (!confirm('Reset all fields? This cannot be undone.')) return;

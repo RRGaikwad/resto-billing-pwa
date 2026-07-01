@@ -12,7 +12,7 @@
 |---|---|
 | **App Name** | Restaurant Billing PWA |
 | **Type** | Single-file Progressive Web App (PWA) |
-| **Current Version** | v1.4.3 |
+| **Current Version** | v1.4.4 |
 | **GitHub Repo** | https://github.com/RRGaikwad/resto-billing-pwa |
 | **Deployed URL** | Deployed on Vercel (auto-deploys on every `git push` to `main`) |
 | **Owner** | RRGaikwad |
@@ -161,11 +161,22 @@ const CACHE_NAME = 'restaurant-billing-v7'; // ← increment this number each de
 This forces all installed PWAs to download the new version.
 
 ### Current SW Cache Version
-`restaurant-billing-v11`
+`restaurant-billing-v12`
 
 ---
 
 ## 📝 Complete Change History & Bug Log
+
+### v1.4.4 — Mobile View Improvements & Preview Button Relocation
+**What was added:**
+- Added "👁️ Preview" button to top-right of dashboard sidebar
+- Added scrollToPreview() JS function for smooth scroll to preview
+- Removed "Restaurant Info" section label from sidebar
+- Improved mobile view ratio with better scaling
+- App version v1.4.4
+- SW cache version v12
+
+---
 
 ### v1.4.3 — Relocate Restaurant Info Edit Button to Settings Modal
 **What was added:**
@@ -355,4 +366,4 @@ This forces all installed PWAs to download the new version.
 
 ---
 
-*Last updated: 2026-07-01 | App Version: v1.4.3 | SW Cache: v11*
+*Last updated: 2026-07-01 | App Version: v1.4.4 | SW Cache: v12*
