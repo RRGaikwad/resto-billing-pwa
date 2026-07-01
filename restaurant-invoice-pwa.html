@@ -778,6 +778,29 @@
   
   #settings-modal-overlay.show { display: flex; }
 
+  #menu-catalogue-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #menu-catalogue-modal-overlay.show { display: flex; }
+
+  #menu-catalogue-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-sidebar);
+    border-radius: 12px;
+    width: 400px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
   #settings-card {
     background: var(--bg-sidebar);
     border: 1px solid var(--border-sidebar);
@@ -1274,6 +1297,10 @@
     <div class="settings-section" style="margin-top: 24px; border-top: 1px solid var(--border-sidebar); padding-top: 24px;">
       <h4 class="settings-section-title">App Actions</h4>
       <div class="settings-buttons">
+        <button class="settings-btn" onclick="openMenuCatalogueModal(); closeSettingsModal();">
+          <span class="settings-btn-icon">📋</span>
+          <span class="settings-btn-text">Menu Catalogue</span>
+        </button>
         <button class="settings-btn" onclick="openHistory(); closeSettingsModal();">
           <span class="settings-btn-icon">🕑</span>
           <span class="settings-btn-text">History</span>
@@ -1291,6 +1318,33 @@
         <span class="settings-btn-icon">🚪</span>
         <span class="settings-btn-text">Logout</span>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MENU CATALOGUE MODAL ═══════════════ -->
+<div id="menu-catalogue-modal-overlay" class="modal-overlay" onclick="if(event.target===this) closeMenuCatalogueModal()">
+  <div id="menu-catalogue-card" class="modal-card">
+    <header style="padding: 16px 20px; border-bottom: 1px solid var(--border-sidebar); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="font-size: 16px; font-weight: 700;">📋 Menu Catalogue</h3>
+      <button class="btn-close-modal" onclick="closeMenuCatalogueModal()">✕</button>
+    </header>
+    
+    <div style="padding: 16px; border-bottom: 1px solid var(--border-sidebar); background: rgba(255,255,255,0.02);">
+      <h4 style="font-size: 12px; margin-bottom: 10px; color: var(--text-sidebar-label);">ADD NEW ITEM</h4>
+      <div class="field-row">
+        <div class="field" style="flex: 2;"><label>Name</label><input type="text" id="menu-cat-name" placeholder="Item name" /></div>
+        <div class="field" style="flex: 1;"><label>Rate (₹)</label><input type="number" id="menu-cat-rate" value="0" min="0" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>GST (%)</label><input type="number" id="menu-cat-gst" value="5" min="0" /></div>
+        <div class="field"><label>Disc (%)</label><input type="number" id="menu-cat-disc" value="0" min="0" max="100" /></div>
+        <button class="btn-premium" style="margin-top: 18px; width: 100%; flex: 1;" onclick="addMenuCatalogueItem()">Add Item</button>
+      </div>
+    </div>
+
+    <div id="menu-catalogue-list" style="overflow-y: auto; padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 8px;">
+      <!-- Menu catalogue items will render here -->
     </div>
   </div>
 </div>
@@ -1441,6 +1495,7 @@ Pune, Maharashtra 411001</textarea>
     <!-- ITEMS -->
     <div class="form-section">
       <div class="section-label">Menu Items</div>
+      <datalist id="menu-suggestions"></datalist>
       <div id="items-list"></div>
       <button id="btn-add-item" onclick="addItem()">+ Add Item</button>
     </div>
@@ -1740,6 +1795,7 @@ Pune, Maharashtra 411001</textarea>
   let items = [];
   let zoomPct = 80;
   let logoDataURL = null;
+  let menuCatalogue = [];
 
   /* ── Init & Database ── */
   const STORAGE_KEY = 'restaurant_invoice_data'; // Kept as fallback/local
@@ -1816,7 +1872,13 @@ Pune, Maharashtra 411001</textarea>
         if (doc.exists) {
           const data = doc.data();
           userPin = data.resPin || null;
-          document.getElementById('app-meta').textContent = `v1.3.2 | UID: ${currentUser.uid.substring(0, 6)} ✓ Live`;
+          
+          if (data.menuCatalogue) {
+            menuCatalogue = data.menuCatalogue;
+            updateMenuDatalist();
+          }
+
+          document.getElementById('app-meta').textContent = `v1.5.0 | UID: ${currentUser.uid.substring(0, 6)} ✓ Live`;
           
           if (data.currentData) {
             // Restore if it's the first load OR if another device made the update
@@ -1826,7 +1888,7 @@ Pune, Maharashtra 411001</textarea>
           }
         } else {
           // No document yet, fallback — first time user
-          document.getElementById('app-meta').textContent = `v1.3.2 | UID: ${currentUser.uid.substring(0, 6)} ⚠ New`;
+          document.getElementById('app-meta').textContent = `v1.5.0 | UID: ${currentUser.uid.substring(0, 6)} ⚠ New`;
           runFallbackLogic();
         }
       }, err => {
@@ -1933,7 +1995,7 @@ Pune, Maharashtra 411001</textarea>
       div.innerHTML = `
         <div class="item-card-header">
           <span class="item-badge">${idx+1}</span>
-          <input class="item-desc" type="text" placeholder="Item description" value="${escHtml(item.desc)}"
+          <input class="item-desc" type="text" list="menu-suggestions" placeholder="Item description" value="${escHtml(item.desc)}"
             oninput="updateItem(${item.id},'desc',this.value)" />
           <button class="btn-remove-item" onclick="removeItem(${item.id})">✕</button>
         </div>
@@ -1961,6 +2023,19 @@ Pune, Maharashtra 411001</textarea>
     const item = items.find(i => i.id === id);
     if (!item) return;
     item[field] = (field === 'desc') ? val : parseFloat(val) || 0;
+
+    // Auto-fill logic for menu catalogue
+    if (field === 'desc') {
+      const match = menuCatalogue.find(mi => mi.name === val);
+      if (match) {
+        item.rate = parseFloat(match.rate) || 0;
+        item.gst = parseFloat(match.gst) || 0;
+        item.disc = parseFloat(match.disc) || 0;
+        // Also update the input fields in the UI
+        renderItemCards(); // Re-render to show updated values in inputs
+      }
+    }
+
     // update amount display inline
     const cards = document.querySelectorAll('.item-card');
     const idx = items.indexOf(item);
@@ -2381,6 +2456,90 @@ Pune, Maharashtra 411001</textarea>
       closeSettingsModal();
     }
   });
+
+  /* ── Menu Catalogue Logic ── */
+  function openMenuCatalogueModal() {
+    document.getElementById('menu-catalogue-modal-overlay').classList.add('show');
+    renderMenuCatalogue();
+  }
+
+  function closeMenuCatalogueModal() {
+    document.getElementById('menu-catalogue-modal-overlay').classList.remove('show');
+  }
+
+  function renderMenuCatalogue() {
+    const list = document.getElementById('menu-catalogue-list');
+    if (!menuCatalogue.length) {
+      list.innerHTML = '<div class="no-history">No items in catalogue yet.</div>';
+      return;
+    }
+    let html = '';
+    menuCatalogue.forEach(item => {
+      html += `
+        <div class="history-item">
+          <div class="history-item-info">
+            <strong>${escHtml(item.name)}</strong>
+            <span>Rate: ₹${item.rate} | GST: ${item.gst}% | Disc: ${item.disc}%</span>
+          </div>
+          <div class="history-item-actions">
+            <button class="btn-hist danger" onclick="deleteMenuCatalogueItem('${escHtml(item.id)}')">Delete</button>
+          </div>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  }
+
+  function addMenuCatalogueItem() {
+    const name = document.getElementById('menu-cat-name').value.trim();
+    const rate = parseFloat(document.getElementById('menu-cat-rate').value) || 0;
+    const gst = parseFloat(document.getElementById('menu-cat-gst').value) || 0;
+    const disc = parseFloat(document.getElementById('menu-cat-disc').value) || 0;
+
+    if (!name) {
+      alert('Please enter an item name');
+      return;
+    }
+
+    const id = Date.now().toString();
+    menuCatalogue.push({ id, name, rate, gst, disc });
+    
+    // Clear form
+    document.getElementById('menu-cat-name').value = '';
+    document.getElementById('menu-cat-rate').value = '0';
+    document.getElementById('menu-cat-gst').value = '5';
+    document.getElementById('menu-cat-disc').value = '0';
+
+    saveMenuCatalogue();
+    renderMenuCatalogue();
+    updateMenuDatalist();
+  }
+
+  function deleteMenuCatalogueItem(id) {
+    if(!confirm('Delete this item from catalogue?')) return;
+    menuCatalogue = menuCatalogue.filter(item => item.id !== id);
+    saveMenuCatalogue();
+    renderMenuCatalogue();
+    updateMenuDatalist();
+  }
+
+  async function saveMenuCatalogue() {
+    if (!currentUser) return;
+    try {
+      await db.collection('users').doc(currentUser.uid).set({ menuCatalogue }, { merge: true });
+      showToast('✓ Catalogue saved');
+    } catch(e) {
+      console.error("Error saving catalogue", e);
+      showToast('❌ Failed to save catalogue');
+    }
+  }
+
+  function updateMenuDatalist() {
+    const datalist = document.getElementById('menu-suggestions');
+    if (datalist) {
+      datalist.innerHTML = menuCatalogue.map(item => `<option value="${escHtml(item.name)}">`).join('');
+    }
+  }
 
   function openMobilePreview() {
     // On mobile: open the preview as a full-screen overlay
