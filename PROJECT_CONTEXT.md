@@ -12,7 +12,7 @@
 |---|---|
 | **App Name** | Restaurant Billing PWA |
 | **Type** | Single-file Progressive Web App (PWA) |
-| **Current Version** | v1.5.0 |
+| **Current Version** | v1.6.0 |
 | **GitHub Repo** | https://github.com/RRGaikwad/resto-billing-pwa |
 | **Deployed URL** | Deployed on Vercel (auto-deploys on every `git push` to `main`) |
 | **Owner** | RRGaikwad |
@@ -67,6 +67,7 @@ Firestore Root
     └── {userId}/                  ← One document per authenticated user
         ├── currentData: {}        ← Full form state snapshot
         ├── resPin: "1234"         ← 4-digit PIN for Restaurant Info lock
+        ├── menuCategories: []     ← Array of category names
         ├── menuCatalogue: []      ← Array of saved menu items for auto-fill
         ├── lastUpdatedBy: string  ← clientId of device that last saved (for sync logic)
         └── updatedAt: timestamp
@@ -162,11 +163,20 @@ const CACHE_NAME = 'restaurant-billing-v7'; // ← increment this number each de
 This forces all installed PWAs to download the new version.
 
 ### Current SW Cache Version
-`restaurant-billing-v13`
+`restaurant-billing-v14`
 
 ---
 
 ## 📝 Complete Change History & Bug Log
+
+### v1.6.0 — Menu Categories & Edit Capabilities
+**What was added:**
+- Added a "Manage Categories" modal to the Settings tab to create and delete menu categories.
+- Made the Menu Catalogue form highly responsive (stacking nicely on mobile displays using flex-wrap).
+- Added an "Edit" button to Menu Catalogue items to update their name, prices, and category.
+- Menu Catalogue items are now grouped by Category visually in the list.
+- App version updated to v1.6.0
+- SW cache version bumped to v14
 
 ### v1.5.0 — Menu Catalogue Feature
 **What was added:**
@@ -377,4 +387,4 @@ This forces all installed PWAs to download the new version.
 
 ---
 
-*Last updated: 2026-07-01 | App Version: v1.5.0 | SW Cache: v13*
+*Last updated: 2026-07-01 | App Version: v1.6.0 | SW Cache: v14*

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'restaurant-billing-v13';
+const CACHE_NAME = 'restaurant-billing-v14';
 const ASSETS = [
   './restaurant-invoice-pwa.html',
   './icon.svg',
